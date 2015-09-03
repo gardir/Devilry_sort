@@ -1,5 +1,6 @@
 import os
 import sys
+import subprocess
 
 def dir_dive_print(ext_dir):
     rootDir = "."
@@ -28,14 +29,40 @@ def dir_dive_print(ext_dir):
                 os.system(command)
 
 if __name__=='__main__':
+    rootDir = "."
     usage = "Usage:\npython sort_deliveries.py [options] path"
     if len(sys.argv) < 1:
         print usage
     else:
         execute = True
-        for arg in sys.argv:
+        rootDir = sys.argv[-1]
+        for arg in sys.argv[:-1]:
             if arg == "-z":
-                command = format("unzip %s/*.zip" % sys.argv[1])
+                files = ""
+                zipfiles = []
+                for dirp, subdirs, filenames in os.walk(rootDir):
+                    files = filenames;
+                    for afile in files:
+                        if afile[-4:] == ".zip":
+                            zipfiles.append(afile)
+                    break
+                if len(zipfiles) > 1:
+                    print "Please have only the zipfile from Devilry in folder"
+                    execute = False
+                    break
+                elif len(zipfiles) == 0:
+                    print "No zipfiles were found in '%s/'" % rootDir
+                    execute = False
+                    break
+                command = ["unzip",
+                           format("%s/%s" % (rootDir, zipfiles[0])), 
+                           "-d",
+                           format("%s" % rootDir)]
+                devnull = open(os.devnull, 'w')
+                subprocess.call(command, stdout = devnull, stderr = subprocess.STDOUT)
+                command = format("mv %s/%s/* %s/" % (rootDir, zipfiles[0][:-4], rootDir))
+                os.system(command)
+                command = format("rm -d %s/%s" % (rootDir, zipfiles[0][:-4]))
                 os.system(command)
             elif arg == "-h":
                 print "%s\nOptions:\n-h -- shows this menu\n-z -- unzip" % usage
