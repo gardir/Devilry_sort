@@ -1,7 +1,7 @@
 #	Devilry Sort
 
 ##	About
-Program goes through all folders downloaded from Devilry, moves the last delivery up to user_root directory, which is also renamed to user_id only. Rest of deliveries is either stored in a new folder 'older' or removed based upon options parameters. Run with [-l]og option is recommended if debug is needed.
+Program goes through all folders downloaded from Devilry, moves the last delivery up to user_root directory, which is also renamed to user_id only. Rest of deliveries is either stored in a new folder 'older' or removed based upon options parameters. Run with [-l]og to create a log of what is done is recommended.
 
 
 ##	Usage
