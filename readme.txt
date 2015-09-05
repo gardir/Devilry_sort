@@ -1,15 +1,25 @@
-usr@host:~/path/ $ python sort_deliveries.py [options] path
-Usage:
+#	Devilry Sort
+
+##	About
+Program goes through all folders downloaded from Devilry, moves the last delivery up to user_root directory, which is also renamed to user_id only. Rest of deliveries is either stored in a new folder 'older' or removed based upon options parameters. Run with [-l]og option is recommended if debug is needed.
+
+
+##	Usage
+
+```
 python sort_deliveries.py [options] path
-Options:
--h -- shows this menu
--z -- unzip
+Options: -bhlkvz || -b -h -l -k -v -z
+ -b -- bare move, no rename of user folder
+ -h -- shows this menu
+ -l -- creates a log file for what happens
+ -d -- delete the other files and folders
+ -v -- loud about what happens
+ -z -- unzips the .zip file in path first
+```
 
+##	Example:
 
-Program goes through all folders downloaded from Devilry, moves the last delivery up to user_root/ directory, removes rest of files and directories, and rename user_root to uio_id.
-
-Example:
-
+```
 ~/
 -sort_deliveries.py
 -assignment1/
@@ -36,9 +46,12 @@ Example:
 -----delivery2/
 ------file.java
 ------readme.txt
+```
 
-Run command: sort_deliveries -z assignment1
+Run command: ```sort_deliveries -zl assignment1```
 Will turn into:
+
+```
 ~/
 -sort_deliveries.py
 -assignment1/
@@ -52,3 +65,4 @@ Will turn into:
 --user3/
 ---file.java
 ---readme.txt
+```
