@@ -38,11 +38,6 @@ Options: -bhlkvz || -b -h -l -k -v -z
 -----delivery1/
 ------file1.java
 ---user3 (131)/
-----deadline1/
------delivery1/
-------file1.java
-------file2.java
-------file3.java
 -----delivery2/
 ------file.java
 ------readme.txt
@@ -56,13 +51,25 @@ Will turn into:
 -sort_deliveries.py
 -assignment1/
 --deliveries.zip
+--log.txt
 --user1/
 ---file1.java
 ---file2.java
 ---file3.java
+---older/
+----deadline1/
+-----delivery1/
+------file1.java
+------file2.java
 --user2/
 ---file1.java
 --user3/
 ---file.java
 ---readme.txt
+---older/
+----deadline1/
+-----delivery1/
+------file1.java
+------file2.java
+------file3.java
 ```
