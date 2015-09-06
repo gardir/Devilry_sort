@@ -4,244 +4,223 @@ import subprocess
 import time
 import shutil
 
-def create(root_path, log_file, log, verbose):
-    path = format("%s/older" % root_path)
-    command = ['mkdir', path]
-    if verbose:
-        print "Creating folder in '%s' for older files" % path
-        subprocess(command)
-    elif log:
-        write_to_log(log_file, format("Creating folder in '%s' for older files" % path))
-        subprocess.call(command, stdout=log_file, stderr = log_file)
-    else:
-        null_out = open(os.devnull, 'w')
-        subprocess(command, stdout = null_out, stderr = subprocess.STDOUT )
-        null_out.close()
+class Devilry_Sort:
+    
+    def __init__(self,
+                 rootDir,
+                 execute=True,
+                 delete=True,
+                 log=False,
+                 rename=True,
+                 unzip=False, 
+                 verbose=False):
+        self.rootDir = rootDir
+        self.execute = execute
+        self.delete = delete
+        self.log = log
+        self.rename = rename
+        self.unzip = unzip
+        self.verbose = verbose
 
-def dive_delete(rootDir, root_depth, log, verbose):
-    if log:
-        log_file = open(format("%s/log.txt" % rootDir), 'a')
-    for dirpath, subdirList, fileList in os.walk(rootDir, topdown=False):
-        depthList = dirpath.split("/")
-        depth = len(depthList) - root_depth
-        if depth == 1:
-            for subdir in subdirList:
-                path = format("%s/%s" % (dirpath, subdir)).replace(" ", "\ ")
-                command = ["rm", "-r", path]
-                if verbose:
-                    print "Recursive removing '%s'" % path
-                    subprocess.call(command)
-                elif log:
-                 write_to_log(log_file,
-                              format("Recursive removing '%s'" % path))
-                if log:
-                    subprocess.call(command, stdout=log_file, stderr = log_file)
-                else:
-                    null_out = open(os.devnull, 'w')
-                    subprocess.call(command, stdout = null_out, stderr = subprocess.STDOUT)
-                    null_out.close()
-    if log:
-        log_file.close()
+        self.my_out = sys.stdout
+        self.my_err = sys.stderr
+        if log:
+            self.log_file = open(format("%s/log.txt" % rootDir), 'w')
+            self.log_file.close()
+            self.log_file = open(format("%s/log.txt" % rootDir), 'a')
+            self.write_to_log("Log created")
+            self.my_out = self.log_file
+            self.my_err = self.log_file
+        elif not verbose:
+            self.null_out = open(os.devnull, 'w')
+            self.my_out = self.null_out
+            self.my_err = subprocess.STDOUT
+    
+    def dive_delete(self, root_depth):
+        for dirpath, subdirList, fileList in os.walk(rootDir, topdown=False):
+            depthList = dirpath.split("/")
+            depth = len(depthList) - root_depth
+            if depth == 1:
+                for subdir in subdirList:
+                    path = format("%s/%s" % (dirpath, subdir)).replace(" ", "\ ")
+                    command = ["rm", "-r", path]
+                    if self.verbose:
+                        print "Recursive removing '%s'" % path
+                    elif self.log:
+                        self.write_to_log(format("Recursive removing '%s'" % path))
+                    subprocess.call(command, stdout = self.my_out, stderr = self.my_err)
 
-def dive_delete_dir(rootDir, root_depth, log, verbose):
-    if log:
-        log_file = open(format("%s/log.txt" % rootDir), 'a')
-    for dirpath, subdirList, fileList in os.walk(rootDir, topdown = False):
-        depth = len(dirpath.split("/")) - root_depth
-        created = False
-        for subdir in subdirList:
-            folder = format("%s/%s" % (dirpath, subdir))
-            command = ['rm', '-d', folder]
-            try:
-                if verbose:
-                    print "Trying to remove empty folder: %s" % folder
-                    subprocess.check_callk(command, stdout=subprocess, stderr = subprocess.STDOUT)
-                elif log:
-                    write_to_log(log_file, format("Trying to remove empty folder: %s" % folder))
-                    subprocess.check_call(command, stdout=log_file, stderr=log_file)
-                else:
-                    subprocess.check_call(command)
-            except subprocess.CalledProcessError:
-                if depth == 1:
-                    if not created:
-                        create(dirpath, log_file, log, verbose)
-                        created = True
-                    move(dirpath, subdir, log_file, log, verbose)
-
-def dive_move(rootDir, root_depth, log, verbose):
-    if log:
-        log_file = open(format("%s/log.txt" % rootDir), 'a')
-    for dirpath, subdirList, fileList in os.walk(rootDir, topdown=True):
-        depthList = dirpath.split("/")
-        depth = len(depthList) - root_depth
-        # We only want last deadline and last delivery
-        if depth == 1 or depth == 2:
-            if (len(subdirList) > 1):
-                last = sorted(subdirList)[-1]
-                i = 0
-                max = len(subdirList)
-                while (i < max):
-                    if (last != subdirList[i]):
-                        del subdirList[i]
-                        i-=1
-                        max-=1
-                    i+=1
-            #subdirList = sorted(subdirList)[-1:]
-        elif depth == 3:
-            from_path = format("%s/" % dirpath)
-            to_path = '/'.join(from_path.split("/")[:-3])
-            if verbose:
-                print "Moving all files in '%s' to '%s'" % (from_path, to_path)
-            elif log:
-                write_to_log(log_file,
-                          format("Moving all files in '%s' to '%s'" % (from_path, to_path)))
-            for work_file in fileList:
-                file_path = format("%s%s" % (from_path, work_file))
-                new_file_path = format("%s/%s" % (to_path, work_file))
-                if verbose:
-                    print "Moved '%s' to '%s'" % (file_path, new_file_path)
-                shutil.move(file_path, new_file_path)
-    if log:
-        log_file.close()
-
-def move(root_path, folder, log_file, log, verbose):
-    from_path = format("%s/%s" % (root_path, folder))
-    to_path = format("%s/older" % root_path)
-    command = ['mv', from_path, to_path]
-    if verbose:
-        print "Moving older files '%s' into '%s'" % (from_path, to_path)
-        subprocess.call(command)
-    elif log:
-        write_to_log(log_file, format("Moving older files '%s' into '%s'" % (from_path, to_path)))
-        subprocess.call(command, stdout = log_file, stderr = log_file)
-    else:
-        null_out = open(os.devnull, 'w')
-        subprocess.call(command, stdout = null_out, stderr = subprocess.STDOUT )
-        null_out.close()
-
-def run(rootDir,
-        execute=True,
-        delete=True,
-        log=False,
-        rename=True,
-        unzip=False, 
-        verbose=False):
-    root_depth = len(rootDir.split("/"))
-    if unzip:
-        ececute = unzip_file(rootDir, root_depth, execute, log, verbose)
-    if rename:
-        user_rename(rootDir, log, verbose)
-    if execute:
-        dive_move(rootDir, root_depth, log, verbose)
-        dive_delete_dir(rootDir, root_depth, log, verbose)
-    if delete:
-        dive_delete(rootDir, root_depth, log, verbose)
-
-def unzip_file(rootDir, root_depth, execute, log=False, verbose=False):
-    files = ""
-    zipfiles = []
-    my_out = sys.stdout
-    my_err = subprocess.STDOUT
-    if log:
-        log_file = open(format("%s/log.txt" % rootDir), 'a')
-        my_out = log_file
-        my_err = log_file
-    elif not verbose:
-        my_out = open(os.devnull, 'w')
-    for dirpath, subdirs, filenames in os.walk(rootDir):
-        depth = len(dirpath.split("/")) - root_depth
-        if depth == 0:
-            if verbose:
-                print "Looking for zip files."
-            files = filenames;
-            for afile in files:
-                if afile[-4:] == ".zip":
-                    if verbose:
-                        print "Found zip-file: %s" % afile
-                    zipfiles.append(afile)
-            if len(zipfiles) > 1:
-                print "Please have only the zipfile from Devilry in folder"
-                execute = False
-            elif len(zipfiles) == 0:
-                print "No zipfiles were found in '%s/'" % rootDir
-                execute = False
-
-            # Unzip command
-            from_path = format("%s/%s" % (rootDir, zipfiles[0]))
-            to_path = rootDir
-            command = ["unzip",
-                       from_path, 
-                       "-d",
-                       to_path]
-            if verbose:
-                print "Unzipping file: %s" % from_path
-            elif log:
-                write_to_log(log_file,
-                             format("Unzipping file '%s'" % (from_path)))
-            subprocess.call(command, stdout = my_out, stderr = my_err)
-            break
-    for dirpath, subdirs, filenames in os.walk(rootDir):
-        if (dirpath[-1] == '/'):
-            depth = len(dirpath[:-1].split("/")) - root_depth
-        else:
+    def dive_delete_dir(self, root_depth):
+        for dirpath, subdirList, fileList in os.walk(rootDir, topdown = False):
             depth = len(dirpath.split("/")) - root_depth
-        if depth == 1:
-            if verbose:
-                print "Going through folders within '%s'" % dirpath
-            elif log:
-                write_to_log(log_file,
-                             format("Going through folders within '%s'" % (dirpath)))
-            # Move all back down to root
-            for subdir in subdirs:
-                from_path = format("%s/%s" % (dirpath, subdir))
-                to_path = '/'.join(dirpath.split("/")[:-1])
-                if verbose:
-                    print "Moving '%s' down to '%s'" % (from_path, to_path)
-                elif log:
-                    write_to_log(log_file,
-                                 format("Moving '%s' down to '%s'" % (from_path, to_path)))
-                shutil.move(from_path, to_path)
-            break
-    # Remove the now empty folder
-    from_path = format("%s/%s" % (rootDir, zipfiles[0][:-4]))
-    command = ["rm", "-d", from_path]
-    if verbose:
-        print "Removing empty folder: %s" % from_path
-    elif log:
-        write_to_log(log_file,
-                    format("Removing empty folder: %s" % (from_path)))
-    subprocess.call(command, stdout = my_out, stderr = my_err)
-    if not verbose:
-        my_out.close()
+            created = False
+            for subdir in subdirList:
+                folder = format("%s/%s" % (dirpath, subdir))
+                command = ['rm', '-d', folder]
+                try:
+                    if self.verbose:
+                        print "Trying to remove empty folder: %s" % folder
+                    elif self.log:
+                        self.write_to_log(format("Trying to remove empty folder: %s" % folder))
+                    subprocess.check_call(command, stdout = self.my_out, stderr = self.my_err)
+                except subprocess.CalledProcessError:
+                    if depth == 1:
+                        self.move(dirpath, subdir)
 
-    if log:
-        log_file.close()
-    return execute
+    def dive_move(self, root_depth):
+        for dirpath, subdirList, fileList in os.walk(rootDir, topdown=True):
+            depthList = dirpath.split("/")
+            depth = len(depthList) - root_depth
+            # We only want last deadline and last delivery
+            if depth == 1 or depth == 2:
+                if (len(subdirList) > 1):
+                    last = sorted(subdirList)[-1]
+                    i = 0
+                    max = len(subdirList)
+                    while (i < max):
+                        if (last != subdirList[i]):
+                            del subdirList[i]
+                            i-=1
+                            max-=1
+                        i+=1
+                #subdirList = sorted(subdirList)[-1:]
+            elif depth == 3:
+                from_path = format("%s/" % dirpath)
+                to_path = '/'.join(from_path.split("/")[:-3])
+                if self.verbose:
+                    print "Moving all files in '%s' to '%s'" % (from_path, to_path)
+                elif self.log:
+                    self.write_to_log(format(
+                        "Moving all files in '%s' to '%s'" % (from_path, to_path)))
+                for work_file in fileList:
+                    file_path = format("%s%s" % (from_path, work_file))
+                    new_file_path = format("%s/%s" % (to_path, work_file))
+                    if self.verbose:
+                        print "Moved '%s' to '%s'" % (file_path, new_file_path)
+                    elif self.log:
+                        self.write_to_log(format("Moved '%s' to '%s'" % (file_path, new_file_path)))
+                    shutil.move(file_path, new_file_path)
 
-def user_rename(rootDir, log, verbose):
-    if log:
-        log_file = open(format("%s/log.txt" % rootDir), 'a')
-    for dirpath, subdirList, fileList in os.walk(rootDir):
-        for subdir in subdirList:
-            filepath = format(''"%s/%s"'' % (dirpath, subdir))
-            new_filepath = format("%s/%s" % (dirpath, subdir.split(" ")[0]))
-            if verbose:
-                print "Renaming '%s' to '%s'" % (filepath, new_filepath)
-            elif log:
-                 write_to_log(log_file,
-                              format("Renaming '%s' to '%s'" % (filepath, new_filepath)))
-            os.rename(filepath, new_filepath)
-        break
-    if log:
-        log_file.close()    
+    def move(self, root_path, folder):
+        from_path = format("%s/%s" % (root_path, folder))
+        to_path = format("%s/older" % root_path)
+        command = ['mv', from_path, to_path]
+        if self.verbose:
+            print "Moving older files '%s' into '%s'" % (from_path, to_path)
+        elif self.log:
+            self.write_to_log(format("Moving older files '%s' into '%s'" % (from_path, to_path)))
+        subprocess.call(command, stdout = self.my_out, stderr = self.my_err)
+
+    def run(self):
+        root_depth = len(self.rootDir.split("/"))
+        if self.unzip:
+            self.ececute = self.unzip_execute(root_depth)
+        if self.rename:
+            self.user_rename()
+        if self.execute:
+            self.dive_move(root_depth)
+            self.dive_delete_dir(root_depth)
+        if self.delete:
+            self.dive_delete(root_depth)
+        if self.log:
+            self.log_file.close()
+        elif not verbose:
+            self.null_file.close()
+
+    def unzip_execute(self, root_depth):
+        files = ""
+        zipfiles = []
+        for dirpath, subdirs, filenames in os.walk(self.rootDir):
+            depth = len(dirpath.split("/")) - root_depth
+            if depth == 0:
+                if self.verbose:
+                    print "Looking for zip files."
+                files = filenames;
+                for afile in files:
+                    if afile[-4:] == ".zip":
+                        if self.verbose:
+                            print "Found zip-file: %s" % afile
+                        elif self.log:
+                            self.write_to_log(format("Found zip-file: %s" % afile))
+                        zipfiles.append(afile)
+                if len(zipfiles) > 1:
+                    print "Please have only the zipfile from Devilry in folder"
+                    self.execute = False
+                elif len(zipfiles) == 0:
+                    print "No zipfiles were found in '%s/'" % rootDir
+                    self.execute = False
+                break # out from os.walk() as only files from root needed
+
+        # Return if _one_ zip file only not found.
+        if self.execute:
+            self.unzip_file(zipfiles[0])
+            self.unzip_clean(root_depth, zipfiles[0][:-4])
+        return execute
+            
+    def unzip_file(self, zipfile):
+        # Unzip command
+        from_path = format("%s/%s" % (self.rootDir, zipfile))
+        to_path = self.rootDir
+        command = ['unzip',
+                   from_path, 
+                   "-d",
+                   to_path]
+        if self.verbose:
+            print "Unzipping file: %s" % from_path
+        elif self.log:
+            self.write_to_log(format("Unzipping file '%s'" % (from_path)))
+        subprocess.call(command, stdout = self.my_out, stderr = self.my_err)
+
+                
+    def unzip_clean(self, root_depth, unzippedfolder):
+        for dirpath, subdirs, filenames in os.walk(self.rootDir):
+            if (dirpath[-1] == '/'):
+                depth = len(dirpath[:-1].split("/")) - root_depth
+            else:
+                depth = len(dirpath.split("/")) - root_depth
+            if depth == 1:
+                if self.verbose:
+                    print "Going through folders within '%s'" % dirpath
+                elif self.log:
+                    self.write_to_log(format("Going through folders within '%s'" % (dirpath)))
+                # Move all back down to root
+                for subdir in subdirs:
+                    from_path = format("%s/%s" % (dirpath, subdir))
+                    to_path = '/'.join(dirpath.split("/")[:-1])
+                    if self.verbose:
+                        print "Moving '%s' down to '%s'" % (from_path, to_path)
+                    elif self.log:
+                        self.write_to_log(format("Moving '%s' down to '%s'" % (from_path, to_path)))
+                    shutil.move(from_path, to_path)
+                break # out from sub-folder created after zip. only these files needed moving
+        # Remove the now empty folder
+        from_path = format("%s/%s" % (self.rootDir, unzippedfolder))
+        command = ["rm", "-d", from_path]
+        if self.verbose:
+            print "Removing empty folder: %s" % from_path
+        elif self.log:
+            self.write_to_log(format("Removing empty folder: %s" % (from_path)))
+        subprocess.call(command, stdout = self.my_out, stderr = self.my_err)
         
-def write_to_log(log_file, text):
-    log_file.write(
-        format("%s-%s: %s\n" %
-               (time.strftime("%H:%M"),
-                time.strftime("%d/%m/%Y"),
-                text)))
-
+    def user_rename(self):
+        for dirpath, subdirList, fileList in os.walk(rootDir):
+            for subdir in subdirList:
+                filepath = format(''"%s/%s"'' % (dirpath, subdir))
+                new_filepath = format("%s/%s" % (dirpath, subdir.split(" ")[0]))
+                if self.verbose:
+                    print "Renaming '%s' to '%s'" % (filepath, new_filepath)
+                elif self.log:
+                    self.write_to_log(format("Renaming '%s' to '%s'" % (filepath, new_filepath)))
+                os.rename(filepath, new_filepath)
+            break
+        
+    def write_to_log(self, text):
+        self.log_file.write(
+            format("%s-%s: %s\n" %
+                   (time.strftime("%H:%M"),
+                    time.strftime("%d/%m/%Y"),
+                    text)))
+        
 def print_usage():
     print "Usage:\npython sort_deliveries.py [options] path"
     print "Options: -bhlkvz || -b -h -l -k -v -z"
@@ -280,9 +259,6 @@ if __name__=='__main__':
                 break
             elif letter == "l":
                 log = True
-                log_file = open(format("%s/log.txt" % rootDir), 'w')
-                write_to_log(log_file, "Log created")
-                log_file.close()
             elif letter == "v":
                 verbose = True
             elif letter == "d":
@@ -290,4 +266,6 @@ if __name__=='__main__':
             elif letter == "b":
                 rename = False
     if execute:
-        run(rootDir, execute, delete, log, rename, unzip, verbose)
+        sorter = Devilry_Sort(rootDir, execute, delete, log, rename, unzip, verbose)
+        sorter.run()
+
