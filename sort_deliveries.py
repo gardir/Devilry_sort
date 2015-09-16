@@ -125,7 +125,7 @@ class Devilry_Sort:
         if self.log:
             self.log_file.close()
         elif not verbose:
-            self.null_file.close()
+            self.null_out.close()
 
     def unzip_execute(self, root_depth):
         files = ""
