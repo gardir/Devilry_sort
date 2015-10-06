@@ -5,15 +5,37 @@ import time
 import shutil
 
 class Devilry_Sort:
-    
     def __init__(self,
                  rootDir,
                  execute=True,
-                 delete=True,
+                 delete=False,
                  log=False,
                  rename=True,
                  unzip=False, 
                  verbose=False):
+        """
+Initializes the class
+        
+Parameters
+----------
+self : this
+    This class
+rootDir : String
+    A string describing the path to root directory
+execute : boolean
+    Execute means the primary function will be executed (default=True)
+delete : boolean
+    If true it will delete all older deliveries (default=False)
+log : boolean
+    If log is true a seperate log-file for what was done is created (default False)
+rename : boolean
+    If renaming is false, the user-id directories will not be renamed to
+        contain only user-id (default=True)
+unzip : boolean
+    If true program is to unzip a .zip file containing the deliveries before execute (default=False)
+verbose : boolean
+    Be loud about what to do
+        """    
         self.rootDir = rootDir
         self.execute = execute
         self.delete = delete
@@ -37,6 +59,9 @@ class Devilry_Sort:
             self.my_err = subprocess.STDOUT
     
     def dive_delete(self, root_depth):
+        """
+
+        """
         for dirpath, subdirList, fileList in os.walk(rootDir, topdown=False):
             depthList = dirpath.split("/")
             depth = len(depthList) - root_depth
@@ -222,7 +247,7 @@ class Devilry_Sort:
                     text)))
         
 def print_usage():
-    print "Usage:\npython sort_deliveries.py [options] path"
+    print ""
     print "Options: -bhlkvz || -b -h -l -k -v -z"
     print "%3s -- %-s" % ("-b", "bare move, no rename of user folder")
     print "%3s -- %-s" % ("-h", "shows this menu")
@@ -232,15 +257,26 @@ def print_usage():
     print "%3s -- %-s" % ("-z", "unzips the .zip file in path first")
 
 if __name__=='__main__':
+    """
+    TO BE DONE
+    # Argument Parser
+    parser = argparse.ArgumentParser(description="Usage:\npython sort_deliveries.py [options] pathProgram preprocesses a latex-file ('infile') and produces a new latex-file ('outfile') with additional functionality")
+    parser.add_argument("infile", help="Name of the latex-file you want preprocessed")
+    parser.add_argument("-o", "--outfile", nargs=1, help="Name of the new file (cannot be equal to infile)")
+    parser.add_argument("-f", "--fancy_verbatim", help="produces more fancy verbatim", action="store_true")
+    parser.add_argument("-v", "--verbosity", help="increase output verbosity", action="store_true")
+    args = parser.parse_args()
+    verbose = args.verbosity
+    fancy = args.fancy_verbatim
+
     if len(sys.argv) < 2 or sys.argv[-1][0] == '-':
         print_usage()
         sys.exit()
         # Quits
-    
+    """
     rootDir = "."
     rootDir = format("%s/%s" % (rootDir, sys.argv[-1]))[2:]
     if (rootDir[-1] == "/"):
-        print "TRUE"
         rootDir = rootDir[:-1]
     execute = True
     delete = False
