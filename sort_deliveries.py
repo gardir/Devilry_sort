@@ -191,7 +191,7 @@ verbose : boolean
         
     def unzip_file(self, zipfile):
         # Unzip command
-        from_path = format("%s/%s" % (self.rootDir, zipfile))
+        from_path = format("%s" % (zipfile))
         to_path = self.rootDir
         command = ['unzip',
                    from_path, 
@@ -316,7 +316,7 @@ if __name__=='__main__':
                 unzip = "true"
                 if argc+1 < argl and sys.argv[argc+1].find(".zip", len(sys.argv[argc+1])-4) != -1:
                     argc += 1
-                    print "%s" % sys.argv[argc]
+                    unzip = sys.argv[argc]
             elif letter == "h":
                 print_usage()
                 execute = False
