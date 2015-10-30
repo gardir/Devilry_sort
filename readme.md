@@ -7,14 +7,16 @@ Program goes through all folders downloaded from Devilry, moves the last deliver
 ##	Usage
 
 ```
-python sort_deliveries.py [options] path
-Options: -bhlkvz || -b -h -l -k -v -z
- -b -- bare move, no rename of user folder
- -h -- shows this menu
- -l -- creates a log file for what happens
- -d -- delete the other files and folders
- -v -- loud about what happens
- -z -- unzips the .zip file in path first
+Usage: python sort_deliveries.py [options] [path]
+Options: -b -h -l -d -v -D -z [zipfile]
+        -b -- bare move, no rename of user folder
+        -h -- shows this menu
+        -l -- creates a log file for what happens
+        -d -- delete the other files and folders
+        -v -- loud about what happens
+        -D -- DEBUG mode, program will not execute
+        -z -- unzips the .zip file in path first (if only 1 is present)
+-z zipfile -- unzipz the specified zip file in path first
 ```
 
 ##	Example:
@@ -43,7 +45,7 @@ Options: -bhlkvz || -b -h -l -k -v -z
 ------readme.txt
 ```
 
-Run command: ```sort_deliveries -zl assignment1```
+Run command: ```sort_deliveries -z -l assignment1```
 Will turn into:
 
 ```

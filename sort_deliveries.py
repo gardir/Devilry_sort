@@ -11,7 +11,7 @@ class Devilry_Sort:
                  delete=False,
                  log=False,
                  rename=True,
-                 unzip=False, 
+                 unzip="false", 
                  verbose=False):
         """
 Initializes the class
@@ -138,7 +138,7 @@ verbose : boolean
 
     def run(self):
         root_depth = len(self.rootDir.split("/"))
-        if self.unzip:
+        if self.unzip != "false":
             self.ececute = self.unzip_execute(root_depth)
         if self.rename:
             self.user_rename()
@@ -153,6 +153,16 @@ verbose : boolean
             self.null_out.close()
 
     def unzip_execute(self, root_depth):
+        zipfile = self.unzip
+        if self.unzip == "true":
+            zipfile = self.find_zip_file(root_depth)
+        # Return if _one_ zip file only not found.
+        if self.execute:
+            self.unzip_file(zipfile)
+            self.unzip_clean(root_depth, zipfile[:-4])
+        return execute
+
+    def find_zip_file(self, root_depth):
         files = ""
         zipfiles = []
         for dirpath, subdirs, filenames in os.walk(self.rootDir):
@@ -175,13 +185,10 @@ verbose : boolean
                     print "No zipfiles were found in '%s/'" % rootDir
                     self.execute = False
                 break # out from os.walk() as only files from root needed
-
-        # Return if _one_ zip file only not found.
-        if self.execute:
-            self.unzip_file(zipfiles[0])
-            self.unzip_clean(root_depth, zipfiles[0][:-4])
-        return execute
-            
+        if len(zipfiles) > 0:
+            return zipfiles[0]
+        return ""
+        
     def unzip_file(self, zipfile):
         # Unzip command
         from_path = format("%s/%s" % (self.rootDir, zipfile))
@@ -247,14 +254,17 @@ verbose : boolean
                     text)))
         
 def print_usage():
-    print ""
-    print "Options: -bhlkvz || -b -h -l -k -v -z"
-    print "%3s -- %-s" % ("-b", "bare move, no rename of user folder")
-    print "%3s -- %-s" % ("-h", "shows this menu")
-    print "%3s -- %-s" % ("-l", "creates a log file for what happens")
-    print "%3s -- %-s" % ("-d", "delete the other files and folders")
-    print "%3s -- %-s" % ("-v", "loud about what happens")
-    print "%3s -- %-s" % ("-z", "unzips the .zip file in path first")
+    print "Usage: python sort_deliveries.py [options] [path]"
+    print "Options: -b -h -l -d -v -D -z [zipfile]"
+    print "%10s -- %-s" % ("-b", "bare move, no rename of user folder")
+    print "%10s -- %-s" % ("-h", "shows this menu")
+    print "%10s -- %-s" % ("-l", "creates a log file for what happens")
+    print "%10s -- %-s" % ("-d", "delete the other files and folders")
+    print "%10s -- %-s" % ("-v", "loud about what happens")
+    print "%10s -- %-s" % ("-D", "DEBUG mode, program will not execute")
+    print "%10s -- %-s" % ("-z", "unzips the .zip file in path first (if only 1 is present)")
+    print "%10s -- %-s" % ("-z zipfile", "unzipz the specified zip file in path first")
+    
 
 if __name__=='__main__':
     """
@@ -275,20 +285,38 @@ if __name__=='__main__':
         # Quits
     """
     rootDir = "."
-    rootDir = format("%s/%s" % (rootDir, sys.argv[-1]))[2:]
-    if (rootDir[-1] == "/"):
-        rootDir = rootDir[:-1]
     execute = True
     delete = False
     rename = True
     log = False
-    unzip = False
+    unzip = "false"
     verbose = False
-    for arg in sys.argv[1:-1]:
-        options = list(arg)
-        for letter in options:
+    
+    # Find correct path according to arguments
+    argl = len(sys.argv)-1
+    # .py  -> program not the only argument
+    # '-'  -> last argument not an option
+    # .zip -> last argument not the zip-file
+    if sys.argv[argl].find(".py") != -1 or \
+       sys.argv[argl][0] == '-' or \
+       sys.argv[argl].find(".zip") != -1:    
+        argl += 1
+    else:
+        rootDir = format("%s/%s" % (rootDir, sys.argv[-1]))[2:]
+        if (rootDir[-1] == "/"):
+            rootDir = rootDir[:-1]
+    argc = 1
+
+    # Handle arguments
+    while argc < argl:
+        arg = sys.argv[argc]
+	options = list(arg)
+        for letter in options[1]:
             if letter == 'z':
-                unzip = True
+                unzip = "true"
+                if argc+1 < argl and sys.argv[argc+1].find(".zip", len(sys.argv[argc+1])-4) != -1:
+                    argc += 1
+                    print "%s" % sys.argv[argc]
             elif letter == "h":
                 print_usage()
                 execute = False
@@ -301,6 +329,11 @@ if __name__=='__main__':
                 delete = True
             elif letter == "b":
                 rename = False
+            elif letter == "D":
+                execute = False
+        argc += 1
+
+    # Execute if executable
     if execute:
         sorter = Devilry_Sort(rootDir, execute, delete, log, rename, unzip, verbose)
         sorter.run()
