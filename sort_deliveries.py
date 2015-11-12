@@ -256,7 +256,7 @@ verbose : boolean
                     text)))
         
 def print_usage():
-    print "Usage: python sort_deliveries.py [options] [path]"
+    print "Usage: python sort_deliveries.py [options] path"
     print "Options: -b -h -l -d -v -D -z [zipfile]"
     print "%10s -- %-s" % ("-b", "bare move, no rename of user folder")
     print "%10s -- %-s" % ("-h", "shows this menu")
@@ -295,19 +295,21 @@ if __name__=='__main__':
     verbose = False
     
     # Find correct path according to arguments
+    argc = 1 # 0 would be programname
     argl = len(sys.argv)-1
     # .py  -> program not the only argument
     # '-'  -> last argument not an option
     # .zip -> last argument not the zip-file
-    if sys.argv[argl].find(".py") != -1 or \
+    if argl < 1 or \
+       sys.argv[argl].find(".py") >= 0 or \
        sys.argv[argl][0] == '-' or \
-       sys.argv[argl].find(".zip") != -1:    
-        argl += 1
-    else:
-        rootDir = format("%s/%s" % (rootDir, sys.argv[-1]))[2:]
-        if (rootDir[-1] == "/"):
-            rootDir = rootDir[:-1]
-    argc = 1
+       sys.argv[argl].find(".zip") >= 0:
+        print_usage()
+        sys.exit()
+    rootDir = format("%s/%s" % (rootDir, sys.argv[-1]))[2:]
+    if (rootDir[-1] == "/"):
+        rootDir = rootDir[:-1]
+    print "root: %s " % rootDir
 
     # Handle arguments
     while argc < argl:

@@ -1,13 +1,13 @@
 #	Devilry Sort
 
 ##	About
-Program goes through all folders downloaded from Devilry, moves the last delivery up to user_root directory, which is also renamed to user_id only. Rest of deliveries is either stored in a new folder 'older' or removed based upon options parameters. Run with [-l]og to create a log of what is done is recommended.
+Program goes through all folders downloaded from Devilry, moves the last delivery up to user_root directory, which is also renamed to user_id only (unless specified not to). Rest of deliveries is either stored in a new folder 'older' or removed based upon options parameters. Running with [-l]og to create a log file of what happens is recommended.
 
 
 ##	Usage
 
 ```
-Usage: python sort_deliveries.py [options] [path]
+Usage: python sort_deliveries.py [options] path
 Options: -b -h -l -d -v -D -z [zipfile]
         -b -- bare move, no rename of user folder
         -h -- shows this menu
@@ -15,7 +15,7 @@ Options: -b -h -l -d -v -D -z [zipfile]
         -d -- delete the other files and folders
         -v -- loud about what happens
         -D -- DEBUG mode, program will not execute
-        -z -- unzips the .zip file in path first (if only 1 is present)
+        -z -- unzips .zip file in path first (if only 1 zip file is present)
 -z zipfile -- unzipz the specified zip file in path first
 ```
 
