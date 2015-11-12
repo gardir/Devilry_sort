@@ -309,7 +309,6 @@ if __name__=='__main__':
     rootDir = format("%s/%s" % (rootDir, sys.argv[-1]))[2:]
     if (rootDir[-1] == "/"):
         rootDir = rootDir[:-1]
-    print "root: %s " % rootDir
 
     # Handle arguments
     while argc < argl:
