@@ -13,11 +13,11 @@ class Devilry_Sort:
                  delete=False,
                  log=False,
                  rename=True,
-                 unzip="false", 
+                 unzip="false",
                  verbose=False):
         """
 Initializes the class
-        
+
 Parameters
 ----------
 self : this
@@ -37,7 +37,7 @@ unzip : boolean
     If true program is to unzip a .zip file containing the deliveries before execute (default=False)
 verbose : boolean
     Be loud about what to do
-        """    
+        """
         self.rootDir = rootDir
         self.execute = execute
         self.delete = delete
@@ -59,7 +59,7 @@ verbose : boolean
             self.null_out = open(os.devnull, 'w')
             self.my_out = self.null_out
             self.my_err = subprocess.STDOUT
-    
+
     def dive_delete(self, root_depth):
         """
 
@@ -190,13 +190,13 @@ verbose : boolean
         if len(zipfiles) > 0:
             return zipfiles[0]
         return ""
-        
+
     def unzip_file(self, zipfile):
         # Unzip command
         from_path = format("%s" % (zipfile))
         to_path = self.rootDir
         command = ['unzip',
-                   from_path, 
+                   from_path,
                    "-d",
                    to_path]
         if self.verbose:
@@ -205,7 +205,7 @@ verbose : boolean
             self.write_to_log(format("Unzipping file '%s'" % (from_path)))
         subprocess.call(command, stdout = self.my_out, stderr = self.my_err)
 
-                
+
     def unzip_clean(self, root_depth, unzippedfolder):
         for dirpath, subdirs, filenames in os.walk(self.rootDir):
             if (dirpath[-1] == '/'):
@@ -235,26 +235,26 @@ verbose : boolean
         elif self.log:
             self.write_to_log(format("Removing empty folder: %s" % (from_path)))
         subprocess.call(command, stdout = self.my_out, stderr = self.my_err)
-        
+
     def user_rename(self):
         for dirpath, subdirList, fileList in os.walk(rootDir):
             for subdir in subdirList:
                 filepath = format(''"%s/%s"'' % (dirpath, subdir))
-                new_filepath = format("%s/%s" % (dirpath, subdir.split(" ")[0]))
+                new_filepath = format("%s/%s" % (dirpath, subdir[0:subdir.find(' (')]))
                 if self.verbose:
                     print "Renaming '%s' to '%s'" % (filepath, new_filepath)
                 elif self.log:
                     self.write_to_log(format("Renaming '%s' to '%s'" % (filepath, new_filepath)))
                 os.rename(filepath, new_filepath)
             break
-        
+
     def write_to_log(self, text):
         self.log_file.write(
             format("%s-%s: %s\n" %
                    (time.strftime("%H:%M"),
                     time.strftime("%d/%m/%Y"),
                     text)))
-        
+
 def print_usage():
     print "Usage: python sort_deliveries.py [options] path"
     print "Options: -b -h -l -d -v -D -z [zipfile]"
@@ -266,7 +266,7 @@ def print_usage():
     print "%10s -- %-s" % ("-D", "DEBUG mode, program will not execute")
     print "%10s -- %-s" % ("-z", "unzips the .zip file in path first (if only 1 is present)")
     print "%10s -- %-s" % ("-z zipfile", "unzipz the specified zip file in path first")
-    
+
 
 if __name__=='__main__':
     """
@@ -293,7 +293,7 @@ if __name__=='__main__':
     log = False
     unzip = "false"
     verbose = False
-    
+
     # Find correct path according to arguments
     argc = 1 # 0 would be programname
     argl = len(sys.argv)-1
@@ -340,4 +340,3 @@ if __name__=='__main__':
     if execute:
         sorter = Devilry_Sort(rootDir, execute, delete, log, rename, unzip, verbose)
         sorter.run()
-
