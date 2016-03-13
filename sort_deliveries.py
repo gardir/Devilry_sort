@@ -240,7 +240,7 @@ verbose : boolean
         for dirpath, subdirList, fileList in os.walk(rootDir):
             for subdir in subdirList:
                 filepath = format(''"%s/%s"'' % (dirpath, subdir))
-                new_filepath = format("%s/%s" % (dirpath, subdir[0:subdir.find(' (')]))
+                new_filepath = format("%s/%s" % (dirpath, (subdir[0:subdir.find('(')]).replace(" ", "")))
                 if self.verbose:
                     print "Renaming '%s' to '%s'" % (filepath, new_filepath)
                 elif self.log:
