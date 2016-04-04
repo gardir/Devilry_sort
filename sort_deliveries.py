@@ -142,9 +142,9 @@ verbose : boolean
         root_depth = len(self.rootDir.split("/"))
         if self.unzip != "false":
             self.ececute = self.unzip_execute(root_depth)
-        if self.rename:
-            self.user_rename()
         if self.execute:
+            if self.rename:
+	        self.user_rename()
             self.dive_move(root_depth)
             self.dive_delete_dir(root_depth)
         if self.delete:
