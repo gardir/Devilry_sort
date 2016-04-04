@@ -147,8 +147,8 @@ verbose : boolean
 	        self.user_rename()
             self.dive_move(root_depth)
             self.dive_delete_dir(root_depth)
-        if self.delete:
-            self.dive_delete(root_depth)
+            if self.delete:
+                self.dive_delete(root_depth)
         if self.log:
             self.log_file.close()
         elif not verbose:
