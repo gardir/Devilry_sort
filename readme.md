@@ -1,7 +1,7 @@
 #	Devilry Sort
 
 ## DISCLAIMER
-Be careful when running program - do not run except in a folder you *CAN STAND TO LOOSE*. This program utilizes the ```rm``` to remove files if run with appropriate options.
+Be careful when running program - do not run except in a folder you *CAN STAND TO LOOSE THE CONTENTS OF*. This program utilizes the ```rm``` without prompting user in order to remove certain files.
 
 ##	About
 Program goes through all folders downloaded from Devilry, moves the last delivery up to user_root directory, which is also renamed to user_id only (unless specified not to). Rest of deliveries is either stored in a new folder 'older' or removed based upon options parameters. Running with [-l]og to create a log file of what happens is recommended.
