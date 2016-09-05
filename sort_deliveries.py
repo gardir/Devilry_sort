@@ -14,6 +14,7 @@ class Devilry_Sort:
                  log=False,
                  rename=True,
                  unzip="false",
+                 javacFlag=False,
                  verbose=False):
         """
 Initializes the class
@@ -44,7 +45,10 @@ verbose : boolean
         self.log = log
         self.rename = rename
         self.unzip = unzip
+        self.javacFlag = javacFlag
         self.verbose = verbose
+
+        self.failed_javac = []
 
         self.my_out = sys.stdout
         self.my_err = sys.stderr
@@ -60,6 +64,12 @@ verbose : boolean
             self.my_out = self.null_out
             self.my_err = subprocess.STDOUT
 
+    def attempt_javac(self, path):
+        command = format("javac %s/*.java" % path)
+        if verbose:
+	    print "%s:" % (command)
+        return subprocess.call(command, shell=True, stdout=self.my_out, stderr=self.my_err)
+            
     def dive_delete(self, root_depth):
         """
 
@@ -93,6 +103,12 @@ verbose : boolean
                 except subprocess.CalledProcessError:
                     if depth == 1:
                         self.move(dirpath, subdir)
+                        if self.attempt_javac(dirpath) != 0:
+                            if self.verbose:
+                                print "%s failed javac" % dirpath
+                            elif self.log:
+                                self.write_to_log(format("%s failed javac" % dirpath))
+                            self.failed_javac.append(dirpath)
 
     def dive_move(self, root_depth):
         for dirpath, subdirList, fileList in os.walk(rootDir, topdown=True):
@@ -205,7 +221,6 @@ verbose : boolean
             self.write_to_log(format("Unzipping file '%s'" % (from_path)))
         subprocess.call(command, stdout = self.my_out, stderr = self.my_err)
 
-
     def unzip_clean(self, root_depth, unzippedfolder):
         for dirpath, subdirs, filenames in os.walk(self.rootDir):
             if (dirpath[-1] == '/'):
@@ -257,13 +272,14 @@ verbose : boolean
 
 def print_usage():
     print "Usage: python sort_deliveries.py [options] path"
-    print "Options: -b -h -l -d -v -D -z [zipfile]"
+    print "Options: -b -c -d -D -h -l -v -z [zipfile]"
     print "%10s -- %-s" % ("-b", "bare move, no rename of user folder")
+    print "%10s -- %-s" % ("-c", "runs javac on each user, and prints those that fail")
+    print "%10s -- %-s" % ("-d", "delete the other files and folders")
+    print "%10s -- %-s" % ("-D", "DEBUG mode, program will not execute")
     print "%10s -- %-s" % ("-h", "shows this menu")
     print "%10s -- %-s" % ("-l", "creates a log file for what happens")
-    print "%10s -- %-s" % ("-d", "delete the other files and folders")
     print "%10s -- %-s" % ("-v", "loud about what happens")
-    print "%10s -- %-s" % ("-D", "DEBUG mode, program will not execute")
     print "%10s -- %-s" % ("-z", "unzips the .zip file in path first (if only 1 is present)")
     print "%10s -- %-s" % ("-z zipfile", "unzipz the specified zip file in path first")
 
@@ -293,6 +309,7 @@ if __name__=='__main__':
     log = False
     unzip = "false"
     verbose = False
+    javacFlag = False
 
     # Find correct path according to arguments
     argc = 1 # 0 would be programname
@@ -334,9 +351,17 @@ if __name__=='__main__':
                 rename = False
             elif letter == "D":
                 execute = False
+            elif letter == "c":
+                javacFlag = True
         argc += 1
 
     # Execute if executable
     if execute:
-        sorter = Devilry_Sort(rootDir, execute, delete, log, rename, unzip, verbose)
+        sorter = Devilry_Sort(rootDir, execute, delete, log, rename, unzip, javacFlag, verbose)
         sorter.run()
+        if len(sorter.failed_javac) > 0:
+            print "Students who did not compile:"
+            for student in sorter.failed_javac:
+                print student
+        else:
+            print "All students compiled"

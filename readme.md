@@ -1,31 +1,41 @@
 #	Devilry Sort
 
+## DISCLAIMER
+Be careful when running program - do not run except in a folder you *CAN STAND TO LOOSE*. This program utilizes the ```rm``` to remove files if run with appropriate options.
+
 ##	About
 Program goes through all folders downloaded from Devilry, moves the last delivery up to user_root directory, which is also renamed to user_id only (unless specified not to). Rest of deliveries is either stored in a new folder 'older' or removed based upon options parameters. Running with [-l]og to create a log file of what happens is recommended.
-
 
 ##	Usage
 
 ```
 Usage: python sort_deliveries.py [options] path
-Options: -b -h -l -d -v -D -z [zipfile]
+Options: -b -c -d -D -h -l -v -z [zipfile]
         -b -- bare move, no rename of user folder
+        -c -- runs javac on each user, and prints those that fail
+        -d -- delete the other files and folders
+        -D -- DEBUG mode, program will not execute
         -h -- shows this menu
         -l -- creates a log file for what happens
-        -d -- delete the other files and folders
         -v -- loud about what happens
-        -D -- DEBUG mode, program will not execute
-        -z -- unzips .zip file in path first (if only 1 zip file is present)
+        -z -- unzips the .zip file in path first (if only 1 is present)
 -z zipfile -- unzipz the specified zip file in path first
 ```
 
 ##	Example:
 
+I start with an empty directory called ```oblig1```:
+
 ```
-~/
--sort_deliveries.py
+assignemnts/
+```
+
+I have downloaded the zipfile ```deliveries.zip``` which is in the ```Downloads``` folder at home.
+This zip file contains the work of 3 users - a regular ```unzip ~/Downloads/deliveries.zip``` could give the following tree from Devilry:
+
+```
+assignemnts/
 -assignment1/
---deliveries.zip
 ---user1 (111)/
 ----deadline1/
 -----delivery1/
@@ -45,12 +55,16 @@ Options: -b -h -l -d -v -D -z [zipfile]
 ------readme.txt
 ```
 
-Run command: ```sort_deliveries -z -l assignment1```
-Will turn into:
+If instead run with this script using the following (explained) command:
+```python sort_deliveries -z ~/Downloads/deliveries.zip .```
+* ```python sort_deliveries``` runs the script
+* ```-z ~/Downloads/deliveries.zip``` tells the script to un(z)ip the file ```~/Downloads/deliveries.zip```
+* and into directory ```.``` -- which means current directory.
+
+Ultimately it turns into:
 
 ```
-~/
--sort_deliveries.py
+assignemnts/
 -assignment1/
 --deliveries.zip
 --log.txt
