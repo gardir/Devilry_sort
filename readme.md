@@ -10,6 +10,8 @@ Program goes through all folders downloaded from Devilry, moves the last deliver
 
 ```
 Usage: python sort_deliveries.py [options] path
+Mandatory: path
+      path -- the mandatory argument which is the output folder to have all user directories within when script is done
 Options: -b -c -d -D -h -l -v -z [zipfile]
         -b -- bare move, no rename of user folder
         -c -- runs javac on each user, and prints those that fail
@@ -20,11 +22,20 @@ Options: -b -c -d -D -h -l -v -z [zipfile]
         -v -- loud about what happens
         -z -- unzips the .zip file in path first (if only 1 is present)
 -z zipfile -- unzipz the specified zip file in path first
+Example usages
+python sort_deliveries -z ~/Downloads/deliveries.zip .
+Above command will first unzip the 'deliveries.zip' into current folder, and then sort all files
+--
+python sort_deliveries -z ~/Downloads/deliveries.zip ~/assignments/assignment1
+Above command will first unzip the 'deliveries.zip' into the folder at '$HOME/assignments/assignment1/' before sorting said directory
+--
+python sort_deliveries .
+Above command will sort deliveries from current directory - it should contain a SINGLE folder representing the first folder received when unzipping.
 ```
 
 ##	Example:
 
-I start with an empty directory called ```oblig1```:
+I start with an empty directory called ```assignemnts```:
 
 ```
 assignemnts/

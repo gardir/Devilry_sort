@@ -1,10 +1,12 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 import os
 import sys
 import subprocess
 import time
 import shutil
+from rettescript import print_failed
 
 class Devilry_Sort:
     def __init__(self,
@@ -65,6 +67,9 @@ verbose : boolean
             self.my_err = subprocess.STDOUT
 
     def attempt_javac(self, path):
+	"""
+	Function inspired by rettescript.javac written by Henrik Hillestad Løvold
+	"""
         command = format("javac %s/*.java" % path)
         if verbose:
 	    print "%s:" % (command)
@@ -272,6 +277,8 @@ verbose : boolean
 
 def print_usage():
     print "Usage: python sort_deliveries.py [options] path"
+    print "Mandatory: path"
+    print "%10s -- %-s" % ("path", "the mandatory argument which is the output folder to have all user directories within when script is done")
     print "Options: -b -c -d -D -h -l -v -z [zipfile]"
     print "%10s -- %-s" % ("-b", "bare move, no rename of user folder")
     print "%10s -- %-s" % ("-c", "runs javac on each user, and prints those that fail")
@@ -282,6 +289,15 @@ def print_usage():
     print "%10s -- %-s" % ("-v", "loud about what happens")
     print "%10s -- %-s" % ("-z", "unzips the .zip file in path first (if only 1 is present)")
     print "%10s -- %-s" % ("-z zipfile", "unzipz the specified zip file in path first")
+    print "Example usages"
+    print "python sort_deliveries -z ~/Downloads/deliveries.zip ."
+    print "Above command will first unzip the 'deliveries.zip' into current folder, and then sort all files"
+    print "--"
+    print "python sort_deliveries -z ~/Downloads/deliveries.zip ~/assignments/assignment1"
+    print "Above command will first unzip the 'deliveries.zip' into the folder at '$HOME/assignments/assignment1/' before sorting said directory"
+    print "--"
+    print "python sort_deliveries ."
+    print "Above command will sort deliveries from current directory - it should contain a SINGLE folder representing the first folder received when unzipping."
 
 
 if __name__=='__main__':
@@ -360,8 +376,6 @@ if __name__=='__main__':
         sorter = Devilry_Sort(rootDir, execute, delete, log, rename, unzip, javacFlag, verbose)
         sorter.run()
         if len(sorter.failed_javac) > 0:
-            print "Students who did not compile:"
-            for student in sorter.failed_javac:
-                print student
+            print_failed(sorter.failed_javac)
         else:
             print "All students compiled"
