@@ -30,7 +30,10 @@ python sort_deliveries -z ~/Downloads/deliveries.zip ~/assignments/assignment1
 Above command will first unzip the 'deliveries.zip' into the folder at '$HOME/assignments/assignment1/' before sorting said directory
 --
 python sort_deliveries .
-Above command will sort deliveries from current directory - it should contain a SINGLE folder representing the first folder received when unzipping.
+Above command will sort deliveries from current directory - it should contain ALL the users folders - so it is NOT enough to just unzip the zip file and then run the sort script on subdirectory. It should be run on directory.
+Command executions example
+unzip ~/Downloads/deliveries.zip ## This will create a folder with the same name as zip-file in current working directory
+python sort_deliveries deliveries ## Assuming the name of folder is equal to the zip file, it should be included as 'path'
 ```
 
 ##	Example:

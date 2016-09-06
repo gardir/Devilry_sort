@@ -297,7 +297,10 @@ def print_usage():
     print "Above command will first unzip the 'deliveries.zip' into the folder at '$HOME/assignments/assignment1/' before sorting said directory"
     print "--"
     print "python sort_deliveries ."
-    print "Above command will sort deliveries from current directory - it should contain a SINGLE folder representing the first folder received when unzipping."
+    print "Above command will sort deliveries from current directory - it should contain ALL the users folders - so it is NOT enough to just unzip the zip file and then run the sort script on subdirectory. It should be run on directory."
+    print "Command executions example"
+    print "unzip ~/Downloads/deliveries.zip ## This will create a folder with the same name as zip-file in current working directory"
+    print "python sort_deliveries deliveries ## Assuming the name of folder is equal to the zip file, it should be included as 'path'"
 
 
 if __name__=='__main__':
