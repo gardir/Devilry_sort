@@ -8,7 +8,7 @@ Program goes through all folders downloaded from Devilry, moves the last deliver
 
 ##	Usage
 
-**NOTE**: Run in an folder _without_ any directories. Files are OK.
+**NOTE**: Run in a folder ***without any*** directories. Files are OK.
 
 ```
 Usage: python sort_deliveries.py [options] path
