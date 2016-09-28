@@ -73,7 +73,11 @@ verbose : boolean
         command = format("javac %s/*.java" % path)
         if verbose:
 	    print "%s:" % (command)
-        return subprocess.call(command, shell=True, stdout=self.my_out, stderr=self.my_err)
+        try:
+            subprocess.check_call(command, shell=True, stdout=self.my_out, stderr=self.my_err)
+        except subprocess.CalledProcessError:
+            return 1
+        return 0
             
     def dive_delete(self, root_depth):
         """
@@ -106,14 +110,18 @@ verbose : boolean
                         self.write_to_log(format("Trying to remove empty folder: %s" % folder))
                     subprocess.check_call(command, stdout = self.my_out, stderr = self.my_err)
                 except subprocess.CalledProcessError:
-                    if depth == 1:
-                        self.move(dirpath, subdir)
-                        if self.attempt_javac(dirpath) != 0:
-                            if self.verbose:
-                                print "%s failed javac" % dirpath
-                            elif self.log:
-                                self.write_to_log(format("%s failed javac" % dirpath))
-                            self.failed_javac.append(dirpath)
+                    if self.verbose:
+                        print "Removing empty folder failed: %s" % folder
+                    elif self.log:
+                        self.write_to_log(format("Removing empty folder failed: %s" % folder))
+	        if depth == 1:
+	            self.move(dirpath, subdir)
+                    if self.attempt_javac(dirpath) != 0:
+                        if self.verbose:
+                            print "%s failed javac" % dirpath
+                        elif self.log:
+                            self.write_to_log(format("%s failed javac" % dirpath))
+                        self.failed_javac.append(dirpath)
 
     def dive_move(self, root_depth):
         for dirpath, subdirList, fileList in os.walk(rootDir, topdown=True):
