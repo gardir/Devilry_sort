@@ -6,6 +6,7 @@ import sys
 import subprocess
 import time
 import shutil
+import glob
 from rettescript import print_failed
 
 class Devilry_Sort:
@@ -55,9 +56,10 @@ verbose : boolean
         self.my_out = sys.stdout
         self.my_err = sys.stderr
         if log:
-            self.log_file = open(format("%s/log.txt" % rootDir), 'w')
+            log_filename = os.path.join(rootDir, "log.txt")
+            self.log_file = open(log_filename, 'w')
             self.log_file.close()
-            self.log_file = open(format("%s/log.txt" % rootDir), 'a')
+            self.log_file = open(log_filename, 'a')
             self.write_to_log("Log created")
             self.my_out = self.log_file
             self.my_err = self.log_file
@@ -70,9 +72,9 @@ verbose : boolean
 	"""
 	Function inspired by rettescript.javac written by Henrik Hillestad Løvold
 	"""
-        command = format("javac %s/*.java" % path)
+        command = format("javac %s" % os.path.join(path, "*.java"))
         if verbose:
-	    print "%s:" % (command)
+            print "%s:" % (command)
         try:
             subprocess.check_call(command, shell=True, stdout=self.my_out, stderr=self.my_err)
         except subprocess.CalledProcessError:
@@ -84,39 +86,43 @@ verbose : boolean
 
         """
         for dirpath, subdirList, fileList in os.walk(rootDir, topdown=False):
-            depthList = dirpath.split("/")
+            depthList = dirpath.split(os.path.sep)
             depth = len(depthList) - root_depth
             if depth == 1:
                 for subdir in subdirList:
-                    path = format("%s/%s" % (dirpath, subdir)).replace(" ", "\ ")
+                    path = os.path.join(dirpath, subdir).replace(" ", "\ ")
                     command = ["rm", "-r", path]
                     if self.verbose:
                         print "Recursive removing '%s'" % path
                     elif self.log:
                         self.write_to_log(format("Recursive removing '%s'" % path))
-                    subprocess.call(command, stdout = self.my_out, stderr = self.my_err)
+                    #subprocess.call(command, stdout = self.my_out, stderr = self.my_err)
+                    shutil.rmtree(path)
 
     def dive_delete_dir(self, root_depth):
         for dirpath, subdirList, fileList in os.walk(rootDir, topdown = False):
-            depth = len(dirpath.split("/")) - root_depth
+            depth = len(dirpath.split(os.path.sep)) - root_depth
             created = False
             for subdir in subdirList:
-                folder = format("%s/%s" % (dirpath, subdir))
+                folder = os.path.join(dirpath, subdir)
                 command = ['rm', '-d', folder]
                 try:
                     if self.verbose:
                         print "Trying to remove empty folder: %s" % folder
                     elif self.log:
                         self.write_to_log(format("Trying to remove empty folder: %s" % folder))
-                    subprocess.check_call(command, stdout = self.my_out, stderr = self.my_err)
-                except subprocess.CalledProcessError:
+                    #subprocess.check_call(command, stdout = self.my_out, stderr = self.my_err)
+                    os.rmdir(folder)
+                #except subprocess.CalledProcessError:
+                except OSError:
                     if self.verbose:
                         print "Removing empty folder failed: %s" % folder
                     elif self.log:
                         self.write_to_log(format("Removing empty folder failed: %s" % folder))
-	        if depth == 1:
-	            self.move(dirpath, subdir)
-                    if self.attempt_javac(dirpath) != 0:
+                if depth == 1:
+                    self.move(dirpath, subdir)
+                    java_files_present = len(glob.glob(dirpath+os.path.sep+'*.java')) > 0
+                    if java_files_present and self.attempt_javac(dirpath) != 0:
                         if self.verbose:
                             print "%s failed javac" % dirpath
                         elif self.log:
@@ -125,7 +131,7 @@ verbose : boolean
 
     def dive_move(self, root_depth):
         for dirpath, subdirList, fileList in os.walk(rootDir, topdown=True):
-            depthList = dirpath.split("/")
+            depthList = dirpath.split(os.path.sep)
             depth = len(depthList) - root_depth
             # We only want last deadline and last delivery
             if depth == 1 or depth == 2:
@@ -141,36 +147,45 @@ verbose : boolean
                         i+=1
                 #subdirList = sorted(subdirList)[-1:]
             elif depth == 3:
-                from_path = format("%s/" % dirpath)
-                to_path = '/'.join(from_path.split("/")[:-3])
+                from_path = dirpath
+                to_path = os.path.join(*from_path.split(os.path.sep)[:-2])
                 if self.verbose:
                     print "Moving all files in '%s' to '%s'" % (from_path, to_path)
                 elif self.log:
                     self.write_to_log(format(
                         "Moving all files in '%s' to '%s'" % (from_path, to_path)))
                 for work_file in fileList:
-                    file_path = format("%s%s" % (from_path, work_file))
-                    new_file_path = format("%s/%s" % (to_path, work_file))
+                    file_path = os.path.join(from_path, work_file)
+                    new_file_path = os.path.join(to_path, work_file)
                     if self.verbose:
                         print "Moved '%s' to '%s'" % (file_path, new_file_path)
                     elif self.log:
                         self.write_to_log(format("Moved '%s' to '%s'" % (file_path, new_file_path)))
-                    shutil.move(file_path, new_file_path)
+                    #shutil.move(file_path, new_file_path)
+                    print "Renaming '%s' to '%s'" % (file_path, new_file_path)
+                    os.rename(file_path, new_file_path)
 
     def move(self, root_path, folder):
-        from_path = format("%s/%s" % (root_path, folder))
-        to_path = format("%s/older" % root_path)
+        from_path = os.path.join(root_path, folder)
+        to_path = os.path.join(root_path, "older")
         command = ['mv', from_path, to_path]
         if self.verbose:
             print "Moving older files '%s' into '%s'" % (from_path, to_path)
         elif self.log:
             self.write_to_log(format("Moving older files '%s' into '%s'" % (from_path, to_path)))
-        subprocess.call(command, stdout = self.my_out, stderr = self.my_err)
+        #subprocess.call(command, stdout = self.my_out, stderr = self.my_err)
+        try:
+            shutil.move(from_path, to_path)
+        except IOError as e:
+            print "ERROR: Could not move '%s' to '%s'" % (from_path, to_path)
+            print e
+            print
+            #sys.exit(1)
 
     def run(self):
-        root_depth = len(self.rootDir.split("/"))
+        root_depth = len(self.rootDir.split(os.path.sep))
         if self.unzip != "false":
-            self.ececute = self.unzip_execute(root_depth)
+            self.execute = self.unzip_execute(root_depth)
         if self.execute:
             if self.rename:
 	        self.user_rename()
@@ -197,7 +212,7 @@ verbose : boolean
         files = ""
         zipfiles = []
         for dirpath, subdirs, filenames in os.walk(self.rootDir):
-            depth = len(dirpath.split("/")) - root_depth
+            depth = len(dirpath.split(os.path.sep)) - root_depth
             if depth == 0:
                 if self.verbose:
                     print "Looking for zip files."
@@ -213,7 +228,7 @@ verbose : boolean
                     print "Please have only the zipfile from Devilry in folder"
                     self.execute = False
                 elif len(zipfiles) == 0:
-                    print "No zipfiles were found in '%s/'" % rootDir
+                    print "No zipfiles were found in '%s%s'" % (rootDir, os.path.sep)
                     self.execute = False
                 break # out from os.walk() as only files from root needed
         if len(zipfiles) > 0:
@@ -236,10 +251,10 @@ verbose : boolean
 
     def unzip_clean(self, root_depth, unzippedfolder):
         for dirpath, subdirs, filenames in os.walk(self.rootDir):
-            if (dirpath[-1] == '/'):
-                depth = len(dirpath[:-1].split("/")) - root_depth
+            if (dirpath[-1] == os.path.sep):
+                depth = len(dirpath[:-1].split(os.path.sep)) - root_depth
             else:
-                depth = len(dirpath.split("/")) - root_depth
+                depth = len(dirpath.split(os.path.sep)) - root_depth
             if depth == 1:
                 if self.verbose:
                     print "Going through folders within '%s'" % dirpath
@@ -247,8 +262,8 @@ verbose : boolean
                     self.write_to_log(format("Going through folders within '%s'" % (dirpath)))
                 # Move all back down to root
                 for subdir in subdirs:
-                    from_path = format("%s/%s" % (dirpath, subdir))
-                    to_path = '/'.join(dirpath.split("/")[:-1])
+                    from_path = os.path.join(dirpath, subdir)
+                    to_path = os.path.join(*dirpath.split(os.path.sep)[:-1])
                     if self.verbose:
                         print "Moving '%s' down to '%s'" % (from_path, to_path)
                     elif self.log:
@@ -256,19 +271,21 @@ verbose : boolean
                     shutil.move(from_path, to_path)
                 break # out from sub-folder created after zip. only these files needed moving
         # Remove the now empty folder
-        from_path = format("%s/%s" % (self.rootDir, unzippedfolder))
+        from_path = os.path.join(self.rootDir, unzippedfolder)
         command = ["rm", "-d", from_path]
         if self.verbose:
             print "Removing empty folder: %s" % from_path
         elif self.log:
             self.write_to_log(format("Removing empty folder: %s" % (from_path)))
-        subprocess.call(command, stdout = self.my_out, stderr = self.my_err)
+        #subprocess.call(command, stdout = self.my_out, stderr = self.my_err)
+        shutil.rmtree(from_path)
 
     def user_rename(self):
         for dirpath, subdirList, fileList in os.walk(rootDir):
             for subdir in subdirList:
-                filepath = format(''"%s/%s"'' % (dirpath, subdir))
-                new_filepath = format("%s/%s" % (dirpath, (subdir[0:subdir.find('(')]).replace(" ", "")))
+                filepath = os.path.join(dirpath, subdir)
+                print filepath
+                new_filepath = os.path.join(dirpath, (subdir[0:subdir.find('(')]).replace(" ", ""))
                 if self.verbose:
                     print "Renaming '%s' to '%s'" % (filepath, new_filepath)
                 elif self.log:
@@ -350,8 +367,8 @@ if __name__=='__main__':
        sys.argv[argl].find(".zip") >= 0:
         print_usage()
         sys.exit()
-    rootDir = format("%s/%s" % (rootDir, sys.argv[-1]))[2:]
-    if (rootDir[-1] == "/"):
+    rootDir = os.path.join(rootDir, sys.argv[-1])[2:]
+    if (rootDir[-1] == os.path.sep):
         rootDir = rootDir[:-1]
 
     # Handle arguments
